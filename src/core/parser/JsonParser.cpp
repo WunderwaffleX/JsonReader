@@ -6,18 +6,6 @@
 
 JsonParser::JsonParser(QObject *parent) : IParser(parent) {}
 
-QVector<DataObject> JsonParser::parseFolder(const QString &folderPath) {
-    QVector<DataObject> allData;
-
-    QDir dir(folderPath);
-    QFileInfoList files = dir.entryInfoList({"*.json"}, QDir::Files);
-
-    for (const QFileInfo &fileInfo : files)
-        allData += parseFile(fileInfo.absoluteFilePath());
-
-    return allData;
-}
-
 QVector<DataObject> JsonParser::parseFile(const QString &filePath) {
     QVector<DataObject> result;
     QFile file(filePath);

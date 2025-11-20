@@ -3,19 +3,19 @@
 #include "model/DataObject.hpp"
 #include <QCheckBox>
 #include <QDialog>
+#include <QHBoxLayout>
 #include <QLineEdit>
 #include <QPushButton>
 #include <QVBoxLayout>
-#include <QHBoxLayout>
 
 class EditDialog : public QDialog {
     Q_OBJECT
 
-public:
+  public:
     explicit EditDialog(const DataObject &obj, QWidget *parent = nullptr);
     DataObject getEditedData() const;
 
-private:
+  private:
     QLineEdit *nameEdit;
     QLineEdit *formatsEdit;
     QLineEdit *encodingEdit;
@@ -25,4 +25,3 @@ private:
 
     DataObject currentData;
 };
-

@@ -14,7 +14,6 @@ class JsonParser : public IParser {
     }
 
     QVector<DataObject> parseFile(const QString &filePath) override;
-    QVector<DataObject> parseFolder(const QString &folderPath) override;
     bool exportDataObjects(const QVector<DataObject> &data,
                            const QString &outputPath) override;
 

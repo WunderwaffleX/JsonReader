@@ -30,9 +30,9 @@ class FileWorker : public QObject {
 
   private:
     QStringList paths;
-    QMap<FileType, QSharedPointer<IParser>> parsers;
+    std::array<QSharedPointer<IParser>, static_cast<size_t>(FileType::Count)>
+        parsers;
 
   private:
     void initParsers();
-    FileType detectParser(const QString &path) const;
 };

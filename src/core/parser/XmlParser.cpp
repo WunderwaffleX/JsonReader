@@ -5,17 +5,6 @@
 
 XmlParser::XmlParser(QObject *parent) : IParser(parent) {}
 
-QVector<DataObject> XmlParser::parseFolder(const QString &folderPath) {
-    QVector<DataObject> allData;
-    QDir dir(folderPath);
-    QFileInfoList files = dir.entryInfoList({"*.xml"}, QDir::Files);
-
-    for (const QFileInfo &file : files)
-        allData += parseFile(file.absoluteFilePath());
-
-    return allData;
-}
-
 QVector<DataObject> XmlParser::parseFile(const QString &filePath) {
     QVector<DataObject> result;
     QFile file(filePath);
@@ -53,18 +42,21 @@ DataObject XmlParser::parseObject(QXmlStreamReader &xml) {
         if (xml.isStartElement()) {
             QString tag = xml.name().toString();
 
+            auto val = xml.readElementText();
+
             if (tag == "texteditor")
-                d.textEditor = xml.readElementText();
+                d.textEditor = val;
             else if (tag == "fileformats")
-                d.fileFormats = xml.readElementText();
+                d.fileFormats = val;
             else if (tag == "encoding")
-                d.encoding = xml.readElementText();
+                d.encoding = val;
             else if (tag == "hasintellisense")
-                d.hasIntellisense = (xml.readElementText() == "true");
+                d.hasIntellisense =
+                    (val.compare("true", Qt::CaseInsensitive) == 0);
             else if (tag == "hasplugins")
-                d.hasPlugins = (xml.readElementText() == "true");
+                d.hasPlugins = (val.compare("true", Qt::CaseInsensitive) == 0);
             else if (tag == "cancompile")
-                d.canCompile = (xml.readElementText() == "true");
+                d.canCompile = (val.compare("true", Qt::CaseInsensitive) == 0);
         }
 
         if (xml.isEndElement() && xml.name() == QStringLiteral("root"))

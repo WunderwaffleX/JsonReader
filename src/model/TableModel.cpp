@@ -83,16 +83,22 @@ QVariant TableModel::data(const QModelIndex &index, int role) const {
 void TableModel::setDataObjects(const QVector<DataObject> &objs) {
     beginResetModel();
     dataObjects = objs;
+
+    idToRow.clear();
+    for (int i = 0; i < dataObjects.size(); ++i)
+        idToRow[dataObjects[i].id] = i;
+
     endResetModel();
 }
 
 void TableModel::appendDataObjects(const QVector<DataObject> &objs) {
     if (objs.isEmpty())
         return;
-
     const int oldSize = dataObjects.size();
     beginInsertRows(QModelIndex(), oldSize, oldSize + objs.size() - 1);
     dataObjects += objs;
+    for (int i = 0; i < objs.size(); ++i)
+        idToRow[objs[i].id] = oldSize + i;
     endInsertRows();
 }
 
@@ -102,12 +108,22 @@ DataObject TableModel::getObject(int row) const {
     return dataObjects[row];
 }
 
+int TableModel::rowById(int id) const {
+    return idToRow.value(id, -1);
+}
+
 bool TableModel::removeRow(int row, const QModelIndex &parent) {
     if (row < 0 || row >= dataObjects.size())
         return false;
+
     beginRemoveRows(parent, row, row);
+    idToRow.remove(dataObjects[row].id);
     dataObjects.removeAt(row);
     endRemoveRows();
+
+    for (int i = row; i < dataObjects.size(); ++i)
+        idToRow[dataObjects[i].id] = i;
+
     return true;
 }
 
@@ -116,6 +132,7 @@ void TableModel::updateRow(int row, const DataObject &obj) {
         return;
 
     dataObjects[row] = obj;
+    idToRow[obj.id] = row;
     emit dataChanged(index(row, 0), index(row, columnCount() - 1));
 }
 

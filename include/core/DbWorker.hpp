@@ -16,7 +16,7 @@ class DbWorker : public QObject {
     void initDatabase();
     void loadAll();
     void insertData(const QVector<DataObject> &data);
-    void editRow(const DataObject &obj); 
+    void editRow(const DataObject &obj);
     void removeRowById(int id);
     void clearAll();
 

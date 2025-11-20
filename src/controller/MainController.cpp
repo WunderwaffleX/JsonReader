@@ -75,30 +75,27 @@ void MainController::initDbWorker() {
 
     connect(dbWorker, &DbWorker::rowEdited, this,
             [this](const DataObject &obj) {
-                for (int row = 0; row < model->rowCount(); ++row) {
-                    if (model->getObject(row).id == obj.id) {
-                        model->updateRow(row, obj);
-                        break;
-                    }
+                int row = model->rowById(obj.id);
+                if (row != -1) {
+                    model->updateRow(row, obj);
                 }
             });
 
     connect(dbWorker, &DbWorker::removed, this, [this](int id) {
-        for (int row = 0; row < model->rowCount(); ++row) {
-            if (model->getObject(row).id == id) {
-                model->removeRow(row);
-                break;
-            }
+        int row = model->rowById(id);
+        if (row != -1) {
+            model->removeRow(row);
         }
     });
 
     connect(this, &MainController::clearRequested, dbWorker,
             &DbWorker::clearAll);
+
+    connect(dbThread, &QThread::started, dbWorker, &DbWorker::initDatabase);
+
     connect(dbWorker, &DbWorker::cleared, model, &TableModel::clear);
 
     dbThread->start();
-
-    QMetaObject::invokeMethod(dbWorker, "initDatabase", Qt::QueuedConnection);
 }
 
 void MainController::startFileWorker(const QStringList &paths) {
@@ -114,14 +111,25 @@ void MainController::startFileWorker(const QStringList &paths) {
     fileWorker->moveToThread(fileThread);
 
     connect(fileThread, &QThread::started, fileWorker, &FileWorker::process);
+
     connect(fileWorker, &FileWorker::finished, this,
             &MainController::onFileWorkerFinished);
+
     connect(fileWorker, &FileWorker::fileError, importDialog,
             &ImportDialog::addError);
+
     connect(fileWorker, &FileWorker::fileParsed, importDialog,
             &ImportDialog::addParsed);
+
     connect(fileWorker, &FileWorker::progressUpdated, importDialog,
             &ImportDialog::updateProgress);
+
+    connect(importDialog, &QDialog::rejected, this, [this]() {
+        if (fileThread) {
+            fileThread->quit();
+            fileThread->wait();
+        }
+    });
 
     connect(fileThread, &QThread::finished, fileWorker, &QObject::deleteLater);
 
@@ -130,7 +138,7 @@ void MainController::startFileWorker(const QStringList &paths) {
 
 void MainController::importFile() {
     QString path = QFileDialog::getOpenFileName(
-        view, "Select JSON/XML file", QString(), FileConst::DialogFilters);
+        view, "Select JSON/XML file", QString(), FileConst::DialogFilters());
     if (path.isEmpty())
         return;
 
@@ -145,13 +153,12 @@ void MainController::importDirectory() {
         return;
 
     QDir dir(dirPath);
-    QStringList paths;
 
-    for (const auto &format : FileConst::AllFormats) {
-        QStringList files = dir.entryList({format.mask}, QDir::Files);
-        for (const QString &f : files)
-            paths << dir.absoluteFilePath(f);
-    }
+    QStringList files = dir.entryList(FileConst::AllMasks(), QDir::Files);
+
+    QStringList paths;
+    for (const QString &f : files)
+        paths << dir.absoluteFilePath(f);
 
     if (paths.isEmpty()) {
         QMessageBox::information(view, "No files",
@@ -212,7 +219,7 @@ void MainController::exportRow(int row) {
     QVector<DataObject> vec = {model->getObject(row)};
 
     QString path = QFileDialog::getSaveFileName(view, "Export file", "export",
-                                                FileConst::DialogFilters);
+                                                FileConst::DialogFilters());
     if (path.isEmpty())
         return;
 

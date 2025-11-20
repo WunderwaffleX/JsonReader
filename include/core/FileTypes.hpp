@@ -2,10 +2,10 @@
 
 #include <QHash>
 #include <QString>
+#include <QStringList>
 #include <QVector>
-#include <Qt>
 
-enum class FileType { Json, Xml, Unknown };
+enum class FileType { Json, Xml, Unknown, Count };
 
 struct FileFormat {
     QString name;
@@ -20,31 +20,51 @@ struct FileFormat {
 };
 
 namespace FileConst {
-inline const FileFormat Json("json");
-inline const FileFormat Xml("xml");
 
-inline const QVector<FileFormat> AllFormats = {Json, Xml};
+inline const QVector<FileFormat> &AllFormats() {
+    static const QVector<FileFormat> formats = {FileFormat("json"),
+                                                FileFormat("xml")};
+    return formats;
+}
 
-inline const QString DialogFilters = []() {
-    QStringList list;
-    for (const auto &f : AllFormats)
-        list << f.dialogFilter;
-    return list.join(";;");
-}();
+inline const QString &DialogFilters() {
+    static const QString filters = [] {
+        QStringList list;
+        for (const auto &f : AllFormats())
+            list << f.dialogFilter;
+        return list.join(";;");
+    }();
+    return filters;
+}
+
+inline const QStringList &AllMasks() {
+    static const QStringList masks = [] {
+        QStringList list;
+        for (const auto &format : AllFormats())
+            list << format.mask;
+        return list;
+    }();
+    return masks;
+}
+
+inline const QHash<FileType, FileFormat> &TypeMap() {
+    static const QHash<FileType, FileFormat> map = {
+        {FileType::Json, FileFormat("json")},
+        {FileType::Xml, FileFormat("xml")}};
+    return map;
+}
+
 } // namespace FileConst
 
-inline const QHash<FileType, FileFormat> FILE_TYPE_MAP = {
-    {FileType::Json, FileConst::Json},
-    {FileType::Xml, FileConst::Xml},
-};
-
 inline FileType detectParser(const QString &path) {
-    QString lower = path.toLower();
+    const QString lower = path.toLower();
 
-    for (auto it = FILE_TYPE_MAP.begin(); it != FILE_TYPE_MAP.end(); ++it) {
-        if (lower.endsWith(it.value().name)) {
+    for (auto it = FileConst::TypeMap().cbegin();
+         it != FileConst::TypeMap().cend(); ++it) {
+        if (lower.endsWith('.' + it.value().name)) {
             return it.key();
         }
     }
+
     return FileType::Unknown;
 }

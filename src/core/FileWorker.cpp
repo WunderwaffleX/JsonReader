@@ -10,20 +10,10 @@ FileWorker::FileWorker(const QStringList &filesOrDirs, QObject *parent)
 }
 
 void FileWorker::initParsers() {
-    parsers[FileType::Json] = QSharedPointer<JsonParser>::create(this);
-    parsers[FileType::Xml] = QSharedPointer<XmlParser>::create(this);
-}
-
-FileType FileWorker::detectParser(const QString &path) const {
-    QFileInfo fi(path);
-    QString ext = fi.suffix().toLower();
-
-    if (ext == "json")
-        return FileType::Json;
-    if (ext == "xml")
-        return FileType::Xml;
-
-    return FileType::Unknown;
+    parsers[static_cast<int>(FileType::Json)] =
+        QSharedPointer<JsonParser>::create(this);
+    parsers[static_cast<int>(FileType::Xml)] =
+        QSharedPointer<XmlParser>::create(this);
 }
 
 void FileWorker::process() {
@@ -42,7 +32,8 @@ void FileWorker::process() {
             continue;
         }
 
-        auto parser = parsers.value(type);
+        auto parser = parsers[static_cast<int>(type)];
+
         if (!parser) {
             emit fileError(path, "Parser not initialized");
             processed++;
@@ -50,12 +41,7 @@ void FileWorker::process() {
             continue;
         }
 
-        QVector<DataObject> parsed;
-        if (fi.isDir()) {
-            parsed = parser->parseFolder(path);
-        } else {
-            parsed = parser->parseFile(path);
-        }
+        QVector<DataObject> parsed = parser->parseFile(path);
 
         if (parsed.isEmpty()) {
             emit fileError(path, "No valid entries found");
@@ -80,12 +66,13 @@ void FileWorker::exportData(const QVector<DataObject> &data,
 
     FileType type = detectParser(outputPath);
 
-    if (!parsers.contains(type)) {
+    auto parser = parsers[static_cast<int>(type)];
+
+    if (!parser) {
         emit exportFinished(false, outputPath);
         return;
     }
 
-    auto parser = parsers.value(type);
     bool ok = parser->exportDataObjects(data, outputPath);
     emit exportFinished(ok, outputPath);
 }

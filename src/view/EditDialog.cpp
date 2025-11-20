@@ -1,8 +1,7 @@
 #include "view/EditDialog.hpp"
 
 EditDialog::EditDialog(const DataObject &obj, QWidget *parent)
-    : QDialog(parent), currentData(obj)
-{
+    : QDialog(parent), currentData(obj) {
     setWindowTitle("Edit Row");
 
     nameEdit = new QLineEdit(obj.textEditor, this);
@@ -39,8 +38,7 @@ EditDialog::EditDialog(const DataObject &obj, QWidget *parent)
     mainLayout->addLayout(buttonsLayout);
 }
 
-DataObject EditDialog::getEditedData() const
-{
+DataObject EditDialog::getEditedData() const {
     DataObject edited = currentData;
     edited.textEditor = nameEdit->text();
     edited.fileFormats = formatsEdit->text();
@@ -50,4 +48,3 @@ DataObject EditDialog::getEditedData() const
     edited.canCompile = compileEdit->isChecked();
     return edited;
 }
-

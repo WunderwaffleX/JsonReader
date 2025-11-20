@@ -167,7 +167,8 @@ void DbWorker::removeRowById(int id) {
 }
 
 void DbWorker::clearAll() {
-    if (!ensureDb()) return;
+    if (!ensureDb())
+        return;
 
     QSqlDatabase db = QSqlDatabase::database(connectionName);
     QSqlQuery q(db);
@@ -177,5 +178,5 @@ void DbWorker::clearAll() {
         return;
     }
 
-    emit cleared(); 
+    emit cleared();
 }

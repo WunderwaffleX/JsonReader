@@ -1,6 +1,6 @@
 #pragma once
-#include <QString>
 #include <QMetaType>
+#include <QString>
 
 struct DataObject {
     int id = -1;

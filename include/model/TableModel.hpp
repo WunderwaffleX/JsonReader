@@ -20,6 +20,8 @@ class TableModel : public QAbstractTableModel {
 
     DataObject getObject(int row) const;
 
+    int rowById(int id) const;
+
     bool removeRow(int row, const QModelIndex &parent = QModelIndex());
     void updateRow(int row, const DataObject &obj);
 
@@ -27,4 +29,5 @@ class TableModel : public QAbstractTableModel {
 
   private:
     QVector<DataObject> dataObjects;
+    QHash<int, int> idToRow;
 };
